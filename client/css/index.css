@@ -1,0 +1,41 @@
+#tabuleiro{
+    width:70%;
+    height:100%;
+    border-collapse: collapse;
+    table-layout:fixed;
+}
+
+#tabuleiro, th, td {
+    border: 1px solid black;
+}
+
+#info{
+    width: 29%;
+    height:100%;
+}
+ 
+.linha{ 
+    height:35px;
+}
+ 
+.casa{    
+    cursor: pointer;
+}
+
+.jogador {
+    margin: 0 auto;
+    width: 80%;
+    height: 80%;
+    background-color: #000000;
+    color: white;
+    text-align: center;
+    vertical-align: middle;
+}
+ 
+.casa_normal{
+    background-color: #fff;
+}
+ 
+.casa_selecionada{
+    background-color: #FF0000;
+}
