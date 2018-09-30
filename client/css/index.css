@@ -42,8 +42,8 @@
     background-color: #fff;
 }
  
-.casa_selecionada{
-    background-color: orange;
+.jogador_selecionado{
+    background-color: black;
     animation-duration: 500ms;
     animation-name: blink;
     animation-iteration-count: infinite;

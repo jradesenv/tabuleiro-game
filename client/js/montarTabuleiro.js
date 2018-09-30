@@ -5,6 +5,8 @@ $(function () {
     var jogadores = null;
     var qtdLinhas = 30;
     var qtdColunas = 35;
+    var jogadorSelecionado = null;
+    var indexJogadorAtual = null;
 
     function Personagem(nome, descricao, habilidades) {
         return {
@@ -28,51 +30,32 @@ $(function () {
             coluna: coluna,
             personagemId: personagemId,
             personagemHabilidadeSelecionada: personagemHabilidadeSelecionada,
-            qtdMovimento: 3
+            qtdMovimento: 3,
+            zigZagAtivo: false
         };
     }
 
-    function marcarMovimentoZigZag(linhaInicio, colunaInicio, qtdMaximoMovimento) {
-        var i;
-        for (i = 0; i < qtdLinhas; i++) {
-            for (j = 0; j < qtdColunas; j++) {
-                if (i == linhaInicio || j == colunaInicio) {
-                    continue;
-                }
-
-                var diffLinha = Math.abs(linhaInicio - i);
-                var diffColuna = Math.abs(colunaInicio - j);
-                var diffTotal = diffLinha + diffColuna;
-
-                console.log("diffLinha: ", diffLinha);
-                console.log("diffColuna: ", diffColuna);
-                console.log("diffTotal: ", diffTotal);
-
-                if (diffTotal <= qtdMaximoMovimento) {
-                    var nome_casa = getNomeCasa(i, j);
-                    $("#" + nome_casa).addClass("casa_possivel");   
-                }
-            }
-        }
+    function marcarMovimento(linhaInicio, colunaInicio) {
+        marcarCasaPossivel(linhaInicio - 1, colunaInicio);  //cima
+        marcarCasaPossivel(linhaInicio + 1, colunaInicio);  //baixo
+        marcarCasaPossivel(linhaInicio, colunaInicio - 1);  //esqueda
+        marcarCasaPossivel(linhaInicio, colunaInicio + 1);  //direita
     }
 
-    function marcarMovimento(linhaInicio, colunaInicio, qtdMaximoMovimento) {
-        var i;
-        for (i = 0; i < qtdLinhas; i++) {
-            for (j = 0; j < qtdColunas; j++) {
-                var diffLinha = Math.abs(linhaInicio - i);
-                var diffColuna = Math.abs(colunaInicio - j);
-                var diffTotal = diffLinha + diffColuna;
+    function marcarMovimentoZigZag(linhaInicio, colunaInicio) {
+        marcarCasaPossivel(linhaInicio - 1, colunaInicio -1);  //cima
+        marcarCasaPossivel(linhaInicio - 1, colunaInicio + 1);  //cima
+        marcarCasaPossivel(linhaInicio + 1, colunaInicio + 1);  //baixo
+        marcarCasaPossivel(linhaInicio + 1, colunaInicio - 1);  //baixo
+        
+    }
 
-                console.log("diffLinha: ", diffLinha);
-                console.log("diffColuna: ", diffColuna);
-                console.log("diffTotal: ", diffTotal);
+    function marcarCasaPossivel(linha, coluna) {
+        var nome_casa = getNomeCasa(linha, coluna);
+        var casa = $("#" + nome_casa);
 
-                if (diffTotal <= qtdMaximoMovimento) {
-                    var nome_casa = getNomeCasa(i, j);
-                    $("#" + nome_casa).addClass("casa_possivel");   
-                }
-            }
+        if (casa != null) {
+            casa.addClass("casa_possivel");
         }
     }
 
@@ -98,23 +81,76 @@ $(function () {
     start();
     function start() {
         criarPersonagens();
+        criarJogadores();
         atualizarTela();
     }
 
     function desenharJogadores() {
+        console.log("desenharJogadores: ", jogadores);
+
         for (var i = 0, len = jogadores.length; i < len; i++) {
             var jogador = jogadores[i];
             var nomeCasa = getNomeCasa(jogador.linha, jogador.coluna);
             var iniciais = jogador.nome.split(" ").map((n,i,a)=> i === 0 || i+1 === a.length ? n[0] : null).join("");
-            $("#" + nomeCasa).append("<div class='jogador' id='jogador_" + jogador.id + "'>" + iniciais + "</div>");
+            
+            var jogadorControlId = "jogador_" + jogador.id;
+            $("#" + nomeCasa).append("<div class='jogador' id='" + jogadorControlId + "'>" + iniciais + "</div>");
+
+            if (jogadorSelecionado != null && jogadorSelecionado.id == jogador.id) {
+                $("#" + jogadorControlId).addClass("jogador_selecionado");
+            }
+        }
+
+        if (jogadorSelecionado != null) {
+            if (jogadorSelecionado.zigZagAtivo) {
+                marcarMovimentoZigZag(jogadorSelecionado.linha, jogadorSelecionado.coluna);
+            } else {
+                marcarMovimento(jogadorSelecionado.linha, jogadorSelecionado.coluna);
+            }
         }
     }
 
+    function atualizarJogadorAtual() {
+        var jogadorAtual = null;
+        var trocarJogador = false;
+
+        if (indexJogadorAtual != null) {
+            jogadorAtual = jogadores[indexJogadorAtual];
+        } else {
+            trocarJogador = true;
+        }
+
+        if (jogadorAtual != null && jogadorAtual.qtdMovimento <= 0) {
+            jogadorAtual.qtdMovimento = 3;
+            jogadorAtual.zigZagAtivo = false;
+            trocarJogador = true;
+        }
+
+        if (trocarJogador) {
+            if (indexJogadorAtual != null && indexJogadorAtual < (jogadores.length -1)) {
+                indexJogadorAtual += 1;
+            } else {
+                indexJogadorAtual = 0;
+            }
+
+            jogadorAtual = jogadores[indexJogadorAtual];
+            console.log("indexJogadorAtual % 2 == 0: ", indexJogadorAtual % 2 == 0);
+            if (indexJogadorAtual % 2 == 0) {
+                jogadorAtual.qtdMovimento = 6;
+                jogadorAtual.zigZagAtivo = true;
+            } else {
+                jogadorAtual.qtdMovimento = 3;
+                jogadorAtual.zigZagAtivo = false;
+            }
+        }
+
+        selecionarJogador(jogadorAtual.id)
+    }
 
     function atualizarTela() {
+        atualizarJogadorAtual();
         limparTabuleiro();
         montarTabuleiro();
-        criarJogadores();
         desenharJogadores();
 
         $(".casa").click(casaOnClick);
@@ -122,22 +158,51 @@ $(function () {
 
     function casaOnClick() {
         casa_selecionada = $(this).attr("id");
-        //$("#" + casa_selecionada).removeClass("casa_selecionada");
-        atualizarTela();
-        $("#" + casa_selecionada).addClass("casa_selecionada");
-        $("#info_casa_selecionada").text(casa_selecionada);
-
         
-        peca_selecionada = $("#" + casa_selecionada).children(".jogador").attr("id");
-        if (peca_selecionada == null) {
-            peca_selecionada = "NENHUM JOGADOR SELECIONADO";
+        var idControleJogador = $("#" + casa_selecionada).children(".jogador").attr("id");
+        if (idControleJogador != null) {
+            var jogadorId = idControleJogador.split("_")[1];
+            selecionarJogador(jogadorId);
         } else {
-            //marcar movimento possivel
-            var jogadorId = peca_selecionada.split("_")[1];
-            var jogadorSelecionado = buscarJogador(jogadorId);
-            marcarMovimento(jogadorSelecionado.linha, jogadorSelecionado.coluna, 3);
+            var isCasaPossivel = $("#" + casa_selecionada).hasClass("casa_possivel");
+
+            console.log("isCasaPossivel: ", isCasaPossivel);
+            if (isCasaPossivel) {
+                var index = getIndexCasa(casa_selecionada);
+                jogadorSelecionado.linha = index.linha;
+                jogadorSelecionado.coluna = index.coluna;
+                jogadorSelecionado.qtdMovimento -= 1;
+
+                salvarJogador(jogadorSelecionado);
+            }
         }
-        $("#info_peca_selecionada").text(peca_selecionada.toString());
+
+        atualizarTela();
+    }
+
+    function salvarJogador(jogadorSalvar) {
+        var index = null;
+        
+        for (var i = 0, len = jogadores.length; i < len; i++) {
+            if (jogadores[i].id == jogadorSalvar.id) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index != null) {
+            console.log("salvando jogador index: ", index);
+            jogadores[index] = jogadorSalvar;
+        }
+
+        console.log("salvarJogador: ", jogadores);
+    }
+
+    function selecionarJogador(id) {
+        $("#info_peca_selecionada").text(id);
+
+        jogadorSelecionado = buscarJogador(id);
+        $("#info_qtd_movimentos").text(jogadorSelecionado.qtdMovimento);
     }
 
     function buscarJogador(id) {
@@ -172,5 +237,13 @@ $(function () {
 
     function getNomeCasa(linha, coluna) {
         return "casa_" + (linha + 1).toString() + "_" + (coluna + 1).toString();
+    }
+
+    function getIndexCasa(idCasa) {
+        var parts = idCasa.split("_");
+        return {
+            linha: parts[1] -1,
+            coluna: parts[2] - 1
+        };
     }
 });
