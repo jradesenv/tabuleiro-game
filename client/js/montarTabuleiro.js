@@ -3,6 +3,8 @@ $(function () {
     var peca_selecionada = null;
     var personagens = null;
     var jogadores = null;
+    var qtdLinhas = 30;
+    var qtdColunas = 35;
 
     function Personagem(nome, descricao, habilidades) {
         return {
@@ -25,8 +27,53 @@ $(function () {
             linha: linha,
             coluna: coluna,
             personagemId: personagemId,
-            personagemHabilidadeSelecionada: personagemHabilidadeSelecionada
+            personagemHabilidadeSelecionada: personagemHabilidadeSelecionada,
+            qtdMovimento: 3
         };
+    }
+
+    function marcarMovimentoZigZag(linhaInicio, colunaInicio, qtdMaximoMovimento) {
+        var i;
+        for (i = 0; i < qtdLinhas; i++) {
+            for (j = 0; j < qtdColunas; j++) {
+                if (i == linhaInicio || j == colunaInicio) {
+                    continue;
+                }
+
+                var diffLinha = Math.abs(linhaInicio - i);
+                var diffColuna = Math.abs(colunaInicio - j);
+                var diffTotal = diffLinha + diffColuna;
+
+                console.log("diffLinha: ", diffLinha);
+                console.log("diffColuna: ", diffColuna);
+                console.log("diffTotal: ", diffTotal);
+
+                if (diffTotal <= qtdMaximoMovimento) {
+                    var nome_casa = getNomeCasa(i, j);
+                    $("#" + nome_casa).addClass("casa_possivel");   
+                }
+            }
+        }
+    }
+
+    function marcarMovimento(linhaInicio, colunaInicio, qtdMaximoMovimento) {
+        var i;
+        for (i = 0; i < qtdLinhas; i++) {
+            for (j = 0; j < qtdColunas; j++) {
+                var diffLinha = Math.abs(linhaInicio - i);
+                var diffColuna = Math.abs(colunaInicio - j);
+                var diffTotal = diffLinha + diffColuna;
+
+                console.log("diffLinha: ", diffLinha);
+                console.log("diffColuna: ", diffColuna);
+                console.log("diffTotal: ", diffTotal);
+
+                if (diffTotal <= qtdMaximoMovimento) {
+                    var nome_casa = getNomeCasa(i, j);
+                    $("#" + nome_casa).addClass("casa_possivel");   
+                }
+            }
+        }
     }
 
     function criarPersonagens() {
@@ -51,7 +98,7 @@ $(function () {
     start();
     function start() {
         criarPersonagens();
-        setInterval(atualizarTela, 5000);
+        atualizarTela();
     }
 
     function desenharJogadores() {
@@ -59,7 +106,7 @@ $(function () {
             var jogador = jogadores[i];
             var nomeCasa = getNomeCasa(jogador.linha, jogador.coluna);
             var iniciais = jogador.nome.split(" ").map((n,i,a)=> i === 0 || i+1 === a.length ? n[0] : null).join("");
-            $("#" + nomeCasa).append("<div class='jogador' id='jogador_1'>" + iniciais + "</div>");
+            $("#" + nomeCasa).append("<div class='jogador' id='jogador_" + jogador.id + "'>" + iniciais + "</div>");
         }
     }
 
@@ -70,30 +117,47 @@ $(function () {
         criarJogadores();
         desenharJogadores();
 
-        $(".casa").click(function () {
-            $("#" + casa_selecionada).removeClass("casa_selecionada");
-            casa_selecionada = $(this).attr("id");
-            $("#" + casa_selecionada).addClass("casa_selecionada");
-            $("#info_casa_selecionada").text(casa_selecionada);
-    
-            peca_selecionada = $("#" + casa_selecionada).children("img:first").attr("id");
-            if (peca_selecionada == null) {
-                peca_selecionada = "NENHUMA PECA SELECIONADA";
-            }
-            $("#info_peca_selecionada").text(peca_selecionada.toString());
-        });
+        $(".casa").click(casaOnClick);
     }
 
+    function casaOnClick() {
+        casa_selecionada = $(this).attr("id");
+        //$("#" + casa_selecionada).removeClass("casa_selecionada");
+        atualizarTela();
+        $("#" + casa_selecionada).addClass("casa_selecionada");
+        $("#info_casa_selecionada").text(casa_selecionada);
 
+        
+        peca_selecionada = $("#" + casa_selecionada).children(".jogador").attr("id");
+        if (peca_selecionada == null) {
+            peca_selecionada = "NENHUM JOGADOR SELECIONADO";
+        } else {
+            //marcar movimento possivel
+            var jogadorId = peca_selecionada.split("_")[1];
+            var jogadorSelecionado = buscarJogador(jogadorId);
+            marcarMovimento(jogadorSelecionado.linha, jogadorSelecionado.coluna, 3);
+        }
+        $("#info_peca_selecionada").text(peca_selecionada.toString());
+    }
+
+    function buscarJogador(id) {
+        var jogador = null;
+        
+        for (var i = 0, len = jogadores.length; i < len; i++) {
+            if (jogadores[i].id == id) {
+                jogador = jogadores[i];
+                break;
+            }
+        }
+
+        return jogador;
+    }
 
     function limparTabuleiro() {
         $("#tabuleiro").empty();
     }
 
     function montarTabuleiro() {
-        var qtdLinhas = 30;
-        var qtdColunas = 35;
-
         var i;
         for (i = 0; i < qtdLinhas; i++) {
             $("#tabuleiro").append("<tr id='linha_" + i.toString() + "' class='linha' >");

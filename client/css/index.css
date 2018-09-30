@@ -1,8 +1,13 @@
+*{
+    margin:0;
+    padding:0;
+    border:0;
+}
+
 #tabuleiro{
-    width:70%;
-    height:100%;
+    /* width:70%;
+    height:100%; */
     border-collapse: collapse;
-    table-layout:fixed;
 }
 
 #tabuleiro, th, td {
@@ -15,10 +20,11 @@
 }
  
 .linha{ 
-    height:35px;
+    height:25px;
 }
  
 .casa{    
+    width:25px;
     cursor: pointer;
 }
 
@@ -37,5 +43,26 @@
 }
  
 .casa_selecionada{
-    background-color: #FF0000;
+    background-color: orange;
+    animation-duration: 500ms;
+    animation-name: blink;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+.casa_possivel {
+    background-color: green;
+    animation-duration: 500ms;
+    animation-name: blink;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+@keyframes blink {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0.3;
+    }
 }
