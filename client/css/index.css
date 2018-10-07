@@ -66,3 +66,11 @@
         opacity: 0.3;
     }
 }
+
+.casa_bau {
+    background-color: purple;
+}
+
+.casa_fogo {
+    background-color: orange;
+}

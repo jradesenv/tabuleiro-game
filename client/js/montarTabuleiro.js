@@ -8,6 +8,27 @@ $(function () {
     var jogadorSelecionado = null;
     var indexJogadorAtual = null;
 
+    var casasEspeciais = {
+        "casa_1_5": "casa_bau",
+        "casa_6_10": "casa_bau",
+        "casa_15_10": "casa_fogo",
+        "casa_15_11": "casa_fogo",
+        "casa_15_12": "casa_fogo",
+        "casa_16_12": "casa_fogo",
+        "casa_17_12": "casa_fogo",
+        "casa_17_13": "casa_fogo"
+    };
+
+    var cartas_disponiveis = [
+        "bola_fogo",
+        "bola_fogo",
+        "bola_fogo",
+        "jabulani_poderosa",
+        "jabulani_poderosa",
+        "cura_nois",
+        "cura_nois",
+    ];
+
     function Personagem(nome, descricao, habilidades) {
         return {
             nome: nome,
@@ -31,7 +52,9 @@ $(function () {
             personagemId: personagemId,
             personagemHabilidadeSelecionada: personagemHabilidadeSelecionada,
             qtdMovimento: 3,
-            zigZagAtivo: false
+            zigZagAtivo: false,
+            cartas: [],
+            casas_usadas: []
         };
     }
 
@@ -173,11 +196,36 @@ $(function () {
                 jogadorSelecionado.coluna = index.coluna;
                 jogadorSelecionado.qtdMovimento -= 1;
 
+                var isCasaBau = $("#" + casa_selecionada).hasClass("casa_bau");
+
+                if (isCasaBau) {
+                    tratarCasaBau(jogadorSelecionado, casa_selecionada);
+                }
+
                 salvarJogador(jogadorSelecionado);
             }
         }
 
         atualizarTela();
+    }
+
+    function tratarCasaBau(jogadorSelecionado, casa_selecionada) {
+        if (jogadorSelecionado.casas_usadas.indexOf(casa_selecionada) == -1) {
+            jogadorSelecionado.cartas.push(comprarCarta());
+
+            jogadorSelecionado.casas_usadas.push(casa_selecionada);
+        } else {
+            console.log("bau já utilizado");
+        }
+    }
+
+    function comprarCarta() {
+        var index = Math.floor(Math.random()*cartas_disponiveis.length);
+        var carta = cartas_disponiveis[index];
+        cartas_disponiveis.splice(index, 1);
+
+        console.log("carta comprada: ", carta);
+        return carta;
     }
 
     function salvarJogador(jogadorSalvar) {
@@ -203,6 +251,8 @@ $(function () {
 
         jogadorSelecionado = buscarJogador(id);
         $("#info_qtd_movimentos").text(jogadorSelecionado.qtdMovimento);
+        $("#info_cartas").text(jogadorSelecionado.cartas.join(", "));
+        $("#info_cartas_disponiveis").text(cartas_disponiveis.join(", "));
     }
 
     function buscarJogador(id) {
@@ -229,7 +279,7 @@ $(function () {
 
             for (j = 0; j < qtdColunas; j++) {
                 var nome_casa = getNomeCasa(i, j);
-                var classe = "casa_normal";
+                var classe = casasEspeciais.hasOwnProperty(nome_casa) ? casasEspeciais[nome_casa] : "casa_normal";
                 $("#linha_" + i.toString()).append("<td id='" + nome_casa + "' class='casa " + classe + "' />");
             }
         }
